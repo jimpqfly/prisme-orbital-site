@@ -1,0 +1,26 @@
+name: Assemble signed Prisme Orbital v1.60
+on:
+  push:
+    branches: [release-staging-v160]
+    paths: [".release-staging/v1.60/**", ".github/workflows/assemble-v160.yml"]
+permissions:
+  contents: write
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reassemble and verify the exact signed APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .release-staging/v1.60/part-01.bin .release-staging/v1.60/part-02.bin > Prisme-Orbital-v1.60.apk
+          echo 'e327261f2159ecd2c9c3b3921e97b0a633aa8afbc7c36f6f629972155d1068c4  Prisme-Orbital-v1.60.apk' | sha256sum --check
+          test "$(stat -c %s Prisme-Orbital-v1.60.apk)" = 18544124
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Prisme-Orbital-v1.60.apk
+          git rm -r .release-staging/v1.60
+          git rm .github/workflows/assemble-v160.yml
+          git commit -m 'Assemble and verify the signed Prisme Orbital v1.60 APK'
+          git push origin HEAD:release-staging-v160
